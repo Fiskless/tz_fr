@@ -1,6 +1,8 @@
 import sys
 import csv
 import os
+from dotenv import load_dotenv
+import datetime
 
 
 from PyQt5.QtWidgets import *
@@ -339,33 +341,26 @@ class DlgContactWindow(QDialog):
         self.close()
 
     def evt_btn_update_contact(self):
-        pass
-        # self.update_table()
+        current_row = self.table.currentRow()
+        name = self.table.item(current_row, 0).text()
+        phone = self.table.item(current_row, 1).text()
+        birthday_date = self.table.item(current_row, 2).text()
+        get_or_change_db_data(f"""UPDATE phone_book SET name='{name}', phone='{phone}' WHERE phone={value} """)
+        connect_db.commit()
+        # update phone_book set name = 'Тима' where  phone = '+7985462265'
 
     def evt_btn_delete_contact(self):
+
+        current_row = self.table.currentRow()
+        name = self.table.item(current_row, 0).text()
+        phone = self.table.item(current_row, 1).text()
         self.table.removeRow(self.table.currentRow())
-
-
-        # row = self.table.currentRow()
-        # rowcount = self.table.rowCount()
-        # self.table.removeRow(row)
-        #
-        # button = self.sender()
-        # if button:
-        #     row = self.table.indexAt(button.pos()).row()
-        #     print(row)
-        #     self.table.removeRow(row)
-        # user_data = self.evt_btn_delete_contact()
-        # print(user_data)
-        # # user_deleted = get_or_change_db_data(
-        # #     f"""DELETE FROM phone_book WHERE name={user_data[0]} AND phone={user_data[1]} AND birthday_date={user_data[2]}""")
-        # # connect_db.commit()
-        # self.close()
+        get_or_change_db_data(f"""DELETE FROM phone_book WHERE name='{name}' AND phone={phone}""")
+        connect_db.commit()
 
     def create_table(self, tab_name):
-        self.widget = QWidget()
-        self.tabmain.addTab(self.widget, tab_name)
-        self.table = QTableWidget(self.widget)
+        self.table = QTableWidget()
+        self.tabmain.addTab(self.table, tab_name)
         self.table.resize(780, 670)
         self.table.setRowCount(30)
         self.table.setColumnCount(3)
@@ -374,7 +369,7 @@ class DlgContactWindow(QDialog):
             ["Имя", "Телефон", "Дата Рождения"])
         self.table.verticalHeader().hide()
         self.table.cellClicked.connect(self.click_table)
-        self.table.cellChanged.connect(self.changed_table_data)
+        self.table.cellDoubleClicked.connect(self.changed_table_data)
 
 
     def setup_layout(self):
@@ -386,10 +381,10 @@ class DlgContactWindow(QDialog):
 
     def update_table(self):
 
-        # alphavite_list = ['АБВ']
+        alphavite_list = ['АБВ']
 
-        alphavite_list = ["АБ", "ВГ", "ДЕ", "ЖЗИЙ", "КЛ", "МН", "ОП", "РС",
-                          "ТУ", "ФХ", "ЦЧШЦ", "ЪЫЬЭ", "ЮЯ"]
+        # alphavite_list = ["АБ", "ВГ", "ДЕ", "ЖЗИЙ", "КЛ", "МН", "ОП", "РС",
+        #                   "ТУ", "ФХ", "ЦЧШЦ", "ЪЫЬЭ", "ЮЯ"]
 
         # alphavite_list = ["БА", "ГВ", "ЕД", "ЙИЗЖ", "ЛК", "НМ", "ПО", "СР",
         #                   "УТ", "ХФ", "ЩШЧЦ", "ЭьЫЪ", "ЯЮ"]
@@ -399,24 +394,34 @@ class DlgContactWindow(QDialog):
             for letter in character:
                 query = get_or_change_db_data(f""" SELECT name, phone, birthday_date FROM phone_book WHERE name LIKE "{letter}%" """)
                 rows = query.fetchall()
-                print(rows)
                 for row_number, row in enumerate(rows):
-                    print(row)
                     for column_number, column in enumerate(row):
-                        print(column)
                         self.table.setItem(row_number, column_number, QTableWidgetItem(str(column)))
 
     def changed_table_data(self):
-        pass
-        # print('Selcet')
+        current_row = self.table.currentRow()
+        #
+        current_column = self.table.currentColumn()
+        print(self.table.currentRow())
+        print(self.table.currentColumn())
+        global value
+        value = self.table.item(current_row, 1).text()
 
-    def click_table(self, current_row, current_column):  # row - номер строки, col - номер столбца
+    def click_table(self):
+        current_row = self.table.currentRow()
+        # current_column = self.table.currentColumn()
+        # print(self.table.currentRow())
+        # print(self.table.currentColumn())
+        # value = self.table.item(current_row, 1).text()
+        # print(value)
+        # return value
         # current_row = self.table.currentRow()
-        print(current_row)
+
         # current_col = self.table.currentColumn()
-        print(current_column)
-        value = self.table.item(current_row, current_column)
-        print(type(value))
+        #
+        # value = self.table.item(current_row, 1).text()
+        # print(value)
+        # print(type(value))
         # print(value)
         # if value:
         #     value = value.text()
@@ -482,7 +487,7 @@ class DlgAddContactToPhonebookWindow(QDialog):
         self.cancel.clicked.connect(self.evt_btn_cancel)
 
         self.unique_contact_fault = QLabel(self)
-        self.unique_contact_fault.setText('Уже есть пользователь с такими данными. ВВедите другое.')
+        self.unique_contact_fault.setText('Уже есть пользователь с такими данными. Введите другие.')
         self.unique_contact_fault.move(50, 270)
         self.unique_contact_fault.hide()
 
@@ -546,16 +551,16 @@ def get_or_change_db_data(query_to_db):
 def connect_to_db():
     return mariadb.connect(
         user=os.getenv("USER"),
-        # password=os.getenv("PASSWORD"),
-        password="paul455034",
+        password=os.getenv("PASSWORD"),
         host="localhost",
         port=3306,
-        database=os.getenv("DATABASE")
-        # database='phone_book'
+        database='phone_book'
     )
 
 
 if __name__ == '__main__':
+
+    load_dotenv()
 
     connect_db = connect_to_db()
 
