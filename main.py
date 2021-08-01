@@ -4,11 +4,13 @@ import os
 from dotenv import load_dotenv
 import datetime
 
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, \
+    QCheckBox, QDateEdit, QTabWidget, QWidget, QTableWidget, QHBoxLayout, \
+    QTableWidgetItem, QApplication
+from PyQt5.QtGui import QFont, QPixmap
+from PyQt5.Qt import Qt
 
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.Qt import *
 
 import mariadb
 from mariadb import IntegrityError
@@ -58,7 +60,8 @@ class DlgMain(QDialog):
         self.registration.setFixedHeight(50)
         self.registration.setText('Регистрация')
         self.registration.clicked.connect(self.show_registration_window)
-        self.registration.setStyleSheet("QPushButton { background-color: gray }")
+        self.registration.setStyleSheet(
+            "QPushButton { background-color: gray }")
 
         self.cancel = QPushButton(self)
         self.cancel.move(340, 220)
@@ -70,7 +73,8 @@ class DlgMain(QDialog):
 
         self.memory_about_user = QCheckBox('Запомнить меня', self)
         self.memory_about_user.move(120, 300)
-        self.memory_about_user.toggled.connect(self.evt_memory_about_user_toggled)
+        self.memory_about_user.toggled.connect(
+            self.evt_memory_about_user_toggled)
 
         self.password_vision = QCheckBox('Показать пароль', self)
         self.password_vision.move(120, 320)
@@ -78,8 +82,10 @@ class DlgMain(QDialog):
 
         self.password_recovery = ClickableLabel(self)
         self.password_recovery.setText('Забыли пароль?')
-        self.password_recovery.setStyleSheet("QLabel { color: blue; text-decoration: underline }")
-        self.password_recovery.clicked.connect(self.evt_password_recovery_click)
+        self.password_recovery.setStyleSheet(
+            "QLabel { color: blue; text-decoration: underline }")
+        self.password_recovery.clicked.connect(
+            self.evt_password_recovery_click)
         self.password_recovery.move(120, 360)
 
     def evt_password_recovery_click(self):
@@ -88,7 +94,10 @@ class DlgMain(QDialog):
 
     def evt_btn_log_in(self):
 
-        user_data = get_or_change_db_data(f"""(SELECT username, password FROM users WHERE username='{self.user_name.text()}' AND password='{self.password.text()}');""")
+        user_data = get_or_change_db_data(
+            f"""(SELECT username, password FROM users 
+            WHERE username='{self.user_name.text()}' 
+            AND password='{self.password.text()}');""")
 
         if user_data.fetchall():
             self.contact_window = DlgContactWindow(self.user_name.text())
@@ -163,7 +172,6 @@ class DlgRegistrationWindow(QDialog):
         self.birthday_date = QDateEdit(self)
         self.birthday_date.move(150, 200)
         self.birthday_date.resize(200, 30)
-        # self.birthday_date.setPlaceholderText('Дата рождения')
         self.birthday_date.setCalendarPopup(True)
 
         self.incorrect_data = QLabel(self)
@@ -188,16 +196,19 @@ class DlgRegistrationWindow(QDialog):
         self.cancel.clicked.connect(self.evt_btn_cancel)
 
         self.unique_username_fault = QLabel(self)
-        self.unique_username_fault.setText('Уже есть пользователь с таким именем. ВВедите другое.')
+        self.unique_username_fault.setText(
+            'Уже есть пользователь с таким именем. ВВедите другое.')
         self.unique_username_fault.move(50, 270)
         self.unique_username_fault.hide()
 
-
     def evt_btn_ok(self):
-
         try:
             if self.password.text() == self.password_confirmation.text():
-                new_user = get_or_change_db_data(f"""INSERT INTO users (username, password, birthday_date) VALUES ('{self.user_name.text()}', '{self.password.text()}', "{self.birthday_date.date().toPyDate()}")""")
+                new_user = get_or_change_db_data(
+                    f"""INSERT INTO users (username, password, birthday_date) 
+                    VALUES ('{self.user_name.text()}', 
+                            '{self.password.text()}', 
+                            '{self.birthday_date.date().toPyDate()}')""")
                 connect_db.commit()
                 self.close()
             else:
@@ -256,7 +267,6 @@ class DlgContactWindow(QDialog):
     def __init__(self, username):
         super().__init__()
         self.setWindowTitle('Телефонная книжка')
-        # self.resize(830, 700)
         self.resize(800, 750)
 
         self.tabmain = QTabWidget()
@@ -267,21 +277,22 @@ class DlgContactWindow(QDialog):
         font = QFont('Times New Roman', 14, 20)
         self.text = QLabel(self)
         self.text.setText(f'Вы зашли как:')
-        self.text.move(450, 10)
+        self.text.move(440, 10)
         self.text.setAlignment(Qt.AlignRight)
         self.text.setFont(font)
 
         self.icon = QLabel(self)
         self.pixmap = QPixmap('pictures/icon.jpg')
         self.icon.setPixmap(self.pixmap)
-        self.icon.move(410, 3)
+        self.icon.move(400, 3)
 
         self.add_contact = QPushButton(self)
         self.add_contact.move(10, 5)
         self.add_contact.setFixedWidth(90)
         self.add_contact.setFixedHeight(30)
         self.add_contact.setText('Добавить')
-        self.add_contact.setStyleSheet("QPushButton { background-color: green }")
+        self.add_contact.setStyleSheet(
+            "QPushButton { background-color: green }")
         self.add_contact.clicked.connect(self.evt_btn_add_contact)
 
         self.update_contact = QPushButton(self)
@@ -319,7 +330,7 @@ class DlgContactWindow(QDialog):
             self.user.setText(f'{username}')
         self.user.setStyleSheet(
             "QLabel { color: blue; text-decoration: underline }")
-        self.user.move(570, 10)
+        self.user.move(560, 10)
 
     def get_username_from_csv(self):
         with open('login_data.csv', 'r') as f:
@@ -340,27 +351,37 @@ class DlgContactWindow(QDialog):
         self.add_contact_to_pb.show()
         self.close()
 
+
     def evt_btn_update_contact(self):
         current_row = self.table.currentRow()
         name = self.table.item(current_row, 0).text()
         phone = self.table.item(current_row, 1).text()
-        birthday_date = self.table.item(current_row, 2).text()
-        get_or_change_db_data(f"""UPDATE phone_book SET name='{name}', phone='{phone}' WHERE phone={value} """)
+        birthday_date = datetime.datetime.strptime(
+            self.table.item(current_row, 2).text(), '%d %B %Y').date()
+
+        get_or_change_db_data(f"""UPDATE phone_book 
+        SET name='{name}', phone='{phone}', birthday_date='{birthday_date}' 
+        WHERE phone={value} """)
         connect_db.commit()
-        # update phone_book set name = 'Тима' where  phone = '+7985462265'
 
     def evt_btn_delete_contact(self):
 
         current_row = self.table.currentRow()
         name = self.table.item(current_row, 0).text()
         phone = self.table.item(current_row, 1).text()
+        birthday_date = datetime.datetime.strptime(
+            self.table.item(current_row, 2).text(), '%d %B %Y').date()
         self.table.removeRow(self.table.currentRow())
-        get_or_change_db_data(f"""DELETE FROM phone_book WHERE name='{name}' AND phone={phone}""")
+
+        get_or_change_db_data(f"""DELETE FROM phone_book 
+        WHERE name='{name}' AND phone={phone} 
+        AND birthday_date='{birthday_date}'""")
         connect_db.commit()
 
     def create_table(self, tab_name):
-        self.table = QTableWidget()
-        self.tabmain.addTab(self.table, tab_name)
+        self.widget = QWidget()
+        self.tabmain.addTab(self.widget, tab_name)
+        self.table = QTableWidget(self.widget)
         self.table.resize(780, 670)
         self.table.setRowCount(30)
         self.table.setColumnCount(3)
@@ -368,9 +389,7 @@ class DlgContactWindow(QDialog):
         self.table.setHorizontalHeaderLabels(
             ["Имя", "Телефон", "Дата Рождения"])
         self.table.verticalHeader().hide()
-        self.table.cellClicked.connect(self.click_table)
-        self.table.cellDoubleClicked.connect(self.changed_table_data)
-
+        self.table.cellDoubleClicked.connect(self.doubleclick_table)
 
     def setup_layout(self):
         container = QWidget(self)
@@ -381,63 +400,35 @@ class DlgContactWindow(QDialog):
 
     def update_table(self):
 
-        alphavite_list = ['АБВ']
+        pages_list = ["АБВГ"]
 
-        # alphavite_list = ["АБ", "ВГ", "ДЕ", "ЖЗИЙ", "КЛ", "МН", "ОП", "РС",
-        #                   "ТУ", "ФХ", "ЦЧШЦ", "ЪЫЬЭ", "ЮЯ"]
+        # pages_list = ['АБ', 'ВГ', 'ДЕ', 'ЖЗИЙ', 'КЛ', 'МН', 'ОП', 'РС',
+        #                   'ТУ', 'ФХ', 'ЦЧШЦ', 'ЪЫЬЭ', 'ЮЯ']
 
-        # alphavite_list = ["БА", "ГВ", "ЕД", "ЙИЗЖ", "ЛК", "НМ", "ПО", "СР",
-        #                   "УТ", "ХФ", "ЩШЧЦ", "ЭьЫЪ", "ЯЮ"]
-
-        for character in alphavite_list:
+        for character in pages_list:
+            row_number_start_from = 0
             self.create_table(character)
             for letter in character:
-                query = get_or_change_db_data(f""" SELECT name, phone, birthday_date FROM phone_book WHERE name LIKE "{letter}%" """)
-                rows = query.fetchall()
-                for row_number, row in enumerate(rows):
+                data_for_tables = get_or_change_db_data(
+                        f""" SELECT name, phone, birthday_date
+                        FROM phone_book WHERE name LIKE "{letter}%" """)
+                rows = data_for_tables.fetchall()
+                for row_number, row in enumerate(rows, start=row_number_start_from):
                     for column_number, column in enumerate(row):
-                        self.table.setItem(row_number, column_number, QTableWidgetItem(str(column)))
+                        if isinstance(column, datetime.date):
+                            self.table.setItem(
+                                row_number, column_number,
+                                QTableWidgetItem(column.strftime('%d %B %Y')))
+                        else:
+                            self.table.setItem(row_number, column_number,
+                                               QTableWidgetItem(str(column)))
+                row_number_start_from = row_number_start_from+row_number+1
+            self.table.sortItems(0, Qt.AscendingOrder)
 
-    def changed_table_data(self):
+    def doubleclick_table(self):
         current_row = self.table.currentRow()
-        #
-        current_column = self.table.currentColumn()
-        print(self.table.currentRow())
-        print(self.table.currentColumn())
         global value
         value = self.table.item(current_row, 1).text()
-
-    def click_table(self):
-        current_row = self.table.currentRow()
-        # current_column = self.table.currentColumn()
-        # print(self.table.currentRow())
-        # print(self.table.currentColumn())
-        # value = self.table.item(current_row, 1).text()
-        # print(value)
-        # return value
-        # current_row = self.table.currentRow()
-
-        # current_col = self.table.currentColumn()
-        #
-        # value = self.table.item(current_row, 1).text()
-        # print(value)
-        # print(type(value))
-        # print(value)
-        # if value:
-        #     value = value.text()
-        #     print(value)
-        # else:
-        #     print('No click')
-        #
-        # user_data = [
-        #     self.table.item(current_row, 0).text(),
-        #     self.table.item(current_row, 1).text(),
-        #     self.table.item(current_row, 2).text()]
-        # print(user_data)
-        # return user_data
-        # self.table.name.setText(self.item(row, 0).text())
-    #     self.table.phone.setText(self.item(row, 1).text().strip())
-    #     self.table.birthday_date.setText(self.item(row, 2).text().strip())
 
 
 class DlgAddContactToPhonebookWindow(QDialog):
@@ -487,14 +478,18 @@ class DlgAddContactToPhonebookWindow(QDialog):
         self.cancel.clicked.connect(self.evt_btn_cancel)
 
         self.unique_contact_fault = QLabel(self)
-        self.unique_contact_fault.setText('Уже есть пользователь с такими данными. Введите другие.')
+        self.unique_contact_fault.setText(
+            'Уже есть пользователь с такими данными. Введите другие.')
         self.unique_contact_fault.move(50, 270)
         self.unique_contact_fault.hide()
 
     def evt_btn_ok(self):
 
         try:
-            get_or_change_db_data(f"""INSERT INTO phone_book (name, phone, birthday_date) VALUES ('{self.user_name.text()}', '{self.phone.text()}', "{self.birthday_date.date().toPyDate()}")""")
+            get_or_change_db_data(
+                f"""INSERT INTO phone_book (name, phone, birthday_date) 
+                VALUES ('{self.user_name.text()}', '{self.phone.text()}', 
+                "{self.birthday_date.date().toPyDate()}")""")
             connect_db.commit()
             self.close()
             self.contact_window = DlgContactWindow('')
@@ -524,7 +519,7 @@ class DlgReminderWindow(QDialog):
         self.table = QTableWidget(self)
         self.table.move(0, 20)
         self.table.resize(490, 370)
-        self.table.setRowCount(1)
+        self.table.setRowCount(15)
         self.table.setColumnCount(3)
         self.table.horizontalHeader().setDefaultSectionSize(160)
         self.table.setHorizontalHeaderLabels(
@@ -533,12 +528,20 @@ class DlgReminderWindow(QDialog):
         self.get_birthday_contact()
 
     def get_birthday_contact(self):
-        query = get_or_change_db_data("""SELECT name, phone, birthday_date FROM phone_book WHERE birthday_date BETWEEN CURRENT_DATE AND (CURRENT_DATE()+7)""")
-        rows = query.fetchall()
+        data_for_remind = get_or_change_db_data(
+            """SELECT name, phone, birthday_date FROM phone_book
+             WHERE MOD(TIMESTAMPDIFF(DAY, birthday_date, CURDATE()), 365.25) 
+             BETWEEN 358 AND 365""")
+        rows = data_for_remind.fetchall()
         for row_number, row in enumerate(rows):
-            self.table.setRowCount(self.table.rowCount() + 1)
             for column_number, column in enumerate(row):
-                self.table.setItem(row_number, column_number, QTableWidgetItem(str(column)))
+                if isinstance(column, datetime.date):
+                    self.table.setItem(
+                        row_number, column_number,
+                        QTableWidgetItem(column.strftime('%d %B %Y')))
+                else:
+                    self.table.setItem(row_number, column_number,
+                                       QTableWidgetItem(str(column)))
 
 
 def get_or_change_db_data(query_to_db):
@@ -554,7 +557,7 @@ def connect_to_db():
         password=os.getenv("PASSWORD"),
         host="localhost",
         port=3306,
-        database='phone_book'
+        database=os.getenv("DATABASE")
     )
 
 
